@@ -262,13 +262,13 @@ function ReducedMotionToggle() {
   return (
     <button
       onClick={toggleReducedMotion}
-      className="flex items-center gap-2 px-4 py-2 rounded-full text-xs tracking-[0.1em] uppercase transition-all hover:bg-white/10"
+      className="flex items-center gap-2 px-4 py-2 rounded-full text-xs tracking-[0.1em] uppercase transition-[background-color,border-color,color] hover:bg-white/10"
       style={{
         fontFamily: F.ui,
         background: reducedMotion ? 'rgba(107,29,88,0.3)' : 'rgba(255,255,255,0.05)',
         border: `1px solid ${reducedMotion ? 'rgba(107,29,88,0.6)' : 'rgba(255,255,255,0.1)'}`,
         color: reducedMotion ? '#c47ab8' : 'rgba(255,255,255,0.6)',
-        transition: 'all 0.3s ease',
+        transition: 'background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease',
       }}
       aria-pressed={reducedMotion}
       aria-label={reducedMotion ? 'Activer les animations' : 'Réduire les animations'}
@@ -317,8 +317,8 @@ export default function App() {
       // Animations normales
       gsap.utils.toArray<HTMLElement>('.reveal-clip').forEach((el) => {
         gsap.fromTo(el,
-          { clipPath: 'inset(0 0 100% 0)', opacity: 1 },
-          { clipPath: 'inset(0 0 0% 0)', duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 82%' } }
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 82%' } }
         );
       });
       gsap.utils.toArray<HTMLElement>('.reveal-up').forEach((el) => {
@@ -404,12 +404,12 @@ export default function App() {
                 className="relative text-xs tracking-[0.15em] uppercase text-white/55 hover:text-white transition-colors group"
                 style={{ fontFamily: F.ui }}>
                 {item}
-                <span className="absolute -bottom-0.5 left-0 h-px w-0 group-hover:w-full transition-all duration-300"
+                <span className="absolute -bottom-0.5 left-0 h-px w-0 group-hover:w-full transition-[width] duration-300"
                   style={{ background: C.light }} />
               </a>
             ))}
             <a href="https://www.maisonlauze.com" target="_blank" rel="noopener"
-              className="flex items-center gap-2 px-5 py-2 rounded-full text-xs tracking-[0.15em] uppercase border border-white/20 hover:bg-white/10 transition-all"
+              className="flex items-center gap-2 px-5 py-2 rounded-full text-xs tracking-[0.15em] uppercase border border-white/20 hover:bg-white/10 transition-[background-color]"
               style={{ fontFamily: F.ui }}>
               <ShoppingBag className="w-3.5 h-3.5" /> Boutique
             </a>
@@ -494,7 +494,7 @@ export default function App() {
               </MagneticButton>
               <MagneticButton
                 onClick={() => setQuizOpen(true)}
-                className="magnetic-button group flex items-center gap-2 px-5 py-3 rounded-full text-xs tracking-[0.15em] uppercase border border-white/20 hover:bg-white/5 hover:border-white/40 transition-all"
+                className="magnetic-button group flex items-center gap-2 px-5 py-3 rounded-full text-xs tracking-[0.15em] uppercase border border-white/20 hover:bg-white/5 hover:border-white/40 transition-[background-color,border-color]"
                 data-cursor="magnetic"
                 style={{ fontFamily: F.ui }}
                 strength={0.35}
@@ -907,7 +907,7 @@ export default function App() {
               </MagneticButton>
               <MagneticButton
                 onClick={() => setQuizOpen(true)}
-                className="magnetic-button group px-8 py-4 rounded-full text-sm tracking-[0.1em] uppercase border border-white/20 hover:bg-white/5 transition-all flex items-center justify-center gap-2"
+                className="magnetic-button group px-8 py-4 rounded-full text-sm tracking-[0.1em] uppercase border border-white/20 hover:bg-white/5 transition-[background-color] flex items-center justify-center gap-2"
                 data-cursor="magnetic"
                 style={{ fontFamily: F.ui }}
               >
