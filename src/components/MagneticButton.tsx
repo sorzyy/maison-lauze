@@ -8,6 +8,7 @@ interface MagneticButtonProps {
   target?: string;
   rel?: string;
   onClick?: () => void;
+  onMouseEnter?: () => void;
   className?: string;
   style?: CSSProperties;
   strength?: number;
@@ -20,6 +21,7 @@ export function MagneticButton({
   target,
   rel,
   onClick,
+  onMouseEnter,
   className = '',
   style = {},
   strength = 0.45,
@@ -110,6 +112,7 @@ export function MagneticButton({
       <button
         ref={ref as React.RefObject<HTMLButtonElement>}
         onClick={onClick}
+        onMouseEnter={onMouseEnter}
         className={className}
         style={baseStyle}
       >
@@ -124,6 +127,7 @@ export function MagneticButton({
       href={href}
       target={target}
       rel={rel}
+      onMouseEnter={onMouseEnter}
       className={className}
       style={baseStyle}
     >

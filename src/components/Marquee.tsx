@@ -1,18 +1,18 @@
 import { useReducedMotion } from '@/context/ReducedMotionContext';
 
 const items = [
-  "Languedoc-Roussillon",
-  "Rhône",
-  "Bordeaux",
-  "Provence",
-  "Bourgogne",
-  "Loire",
-  "Alsace",
-  "Sud-Ouest",
-  "Maison Lauze",
-  "Fondée en 1886",
-  "469 Vins",
-  "6 Générations",
+  "Saint-Nicolas-de-Bourgueil",
+  "Bourgueil",
+  "Cabernet Franc",
+  "Agriculture Biologique",
+  "Famille Cognard",
+  "Fondée en 1973",
+  "15 Hectares",
+  "3 Générations",
+  "Certifié AB 2020",
+  "Val de Loire",
+  "Tuffeau",
+  "Vendanges manuelles",
 ];
 
 export function Marquee({ reverse = false }: { reverse?: boolean }) {
@@ -41,7 +41,7 @@ export function Marquee({ reverse = false }: { reverse?: boolean }) {
           {items.map((item, i) => (
             <span key={i} className="flex items-center gap-12 text-xs tracking-[0.25em] uppercase text-white/25 flex-shrink-0">
               {item}
-              <span className="inline-block w-1 h-1 rounded-full" style={{ background: '#6a1d58' }} />
+              <span className="inline-block w-1 h-1 rounded-full" style={{ background: '#7a1a1a' }} />
             </span>
           ))}
         </div>
@@ -67,7 +67,7 @@ export function Marquee({ reverse = false }: { reverse?: boolean }) {
         {doubled.map((item, i) => (
           <span key={i} className="flex items-center gap-12 text-xs tracking-[0.25em] uppercase text-white/25">
             {item}
-            <span className="inline-block w-1 h-1 rounded-full" style={{ background: '#6a1d58' }} />
+            <span className="inline-block w-1 h-1 rounded-full" style={{ background: '#7a1a1a' }} />
           </span>
         ))}
       </div>
