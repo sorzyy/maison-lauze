@@ -74,7 +74,7 @@ export function Hero21st() {
             className="absolute w-[150%] h-[150%] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
             style={{ 
               pointerEvents: 'none',
-              filter: 'brightness(0.7) saturate(1.1)'
+              filter: 'brightness(0.5) saturate(1.1)'
             }}
             onLoad={() => setVideoLoaded(true)}
           />
