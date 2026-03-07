@@ -1,1 +1,0 @@
-import{c as e,j as t,r,R as s,a as o}from"./index-DPuecVek.js";e.createRoot(document.getElementById("root")).render(t.jsx(r.StrictMode,{"code-path":"src/main-v2.tsx:8:3",children:t.jsx(s,{"code-path":"src/main-v2.tsx:9:5",children:t.jsx(o,{"code-path":"src/main-v2.tsx:10:7"})})}));
