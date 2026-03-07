@@ -8,41 +8,43 @@ interface AudioContextType {
   isMuted: boolean;
 }
 
-const AudioContext = createContext<AudioContextType | null>(null);
+const AudioCtx = createContext<AudioContextType | null>(null);
 
-// Generate subtle click sound using Web Audio API (no external files needed)
-const createClickSound = () => {
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const oscillator = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-  
-  oscillator.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-  
-  oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-  oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
-  
-  gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-  
-  oscillator.start(audioContext.currentTime);
-  oscillator.stop(audioContext.currentTime + 0.1);
+// Single shared AudioContext instance — browsers limit to ~6 simultaneous contexts
+let sharedAudioContext: AudioContext | null = null;
+
+const getAudioContext = (): AudioContext | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+      sharedAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (sharedAudioContext.state === 'suspended') {
+      sharedAudioContext.resume();
+    }
+    return sharedAudioContext;
+  } catch {
+    return null;
+  }
 };
 
-const createHoverSound = () => {
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const oscillator = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-  
-  oscillator.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-  
-  oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-  gainNode.gain.setValueAtTime(0.03, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
-  
-  oscillator.start(audioContext.currentTime);
-  oscillator.stop(audioContext.currentTime + 0.05);
+const playTone = (frequency: number, gain: number, duration: number) => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency * 0.5, ctx.currentTime + duration);
+    gainNode.gain.setValueAtTime(gain, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + duration);
+  } catch {
+    // Ignore audio errors silently
+  }
 };
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
@@ -52,7 +54,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
     return false;
   });
-  
+
   const lastScrollSound = useRef(0);
 
   useEffect(() => {
@@ -61,20 +63,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const playHover = useCallback(() => {
     if (isMuted) return;
-    try {
-      createHoverSound();
-    } catch (e) {
-      // Audio context might be blocked
-    }
+    playTone(200, 0.03, 0.05);
   }, [isMuted]);
 
   const playClick = useCallback(() => {
     if (isMuted) return;
-    try {
-      createClickSound();
-    } catch (e) {
-      // Audio context might be blocked
-    }
+    playTone(800, 0.1, 0.1);
   }, [isMuted]);
 
   const playScroll = useCallback(() => {
@@ -82,24 +76,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const now = Date.now();
     if (now - lastScrollSound.current < 100) return;
     lastScrollSound.current = now;
-    
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0.02, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.03);
-    } catch (e) {
-      // Ignore
-    }
+    playTone(100, 0.02, 0.03);
   }, [isMuted]);
 
   const toggleMute = useCallback(() => {
@@ -107,14 +84,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AudioContext.Provider value={{ playHover, playClick, playScroll, toggleMute, isMuted }}>
+    <AudioCtx.Provider value={{ playHover, playClick, playScroll, toggleMute, isMuted }}>
       {children}
-    </AudioContext.Provider>
+    </AudioCtx.Provider>
   );
 }
 
 export const useAudio = () => {
-  const context = useContext(AudioContext);
+  const context = useContext(AudioCtx);
   if (!context) {
     throw new Error('useAudio must be used within AudioProvider');
   }

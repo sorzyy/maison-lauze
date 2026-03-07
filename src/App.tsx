@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ShoppingBag, X, Menu, ArrowUpRight, Volume2, VolumeX } from 'lucide-react';
@@ -28,24 +28,37 @@ const F = {
   ui: "'Inter', -apple-system, sans-serif",
 };
 
-// Colors - Loire Crépuscule (plus clair/chaud)
+// Colors - Thème Lin & Terre
 const C = {
-  bg: '#121418',
-  bgElevated: '#1A1E24',
-  text: '#F5F0EB',
-  textMuted: 'rgba(245,240,235,0.55)',
-  accent: '#8B5A6B',
+  bg: '#F5EDE4',
+  bgElevated: '#FDF8F3',
+  text: '#5C4033',
+  textMuted: 'rgba(92,64,51,0.6)',
+  accent: '#8B3A3A',
   accentLight: '#D4A574',
   gold: '#B8956B',
+  sage: '#7A8B6E',
 };
 
-// Data
+// Images fiables (Unsplash + placeholders)
+const IMAGES = {
+  hero: 'https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?w=1920&q=80',
+  family: 'https://images.unsplash.com/photo-1516594915307-8f1e87da2797?w=800&q=80',
+  terroir1: 'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1200&q=80',
+  terroir2: 'https://images.unsplash.com/photo-1523741543316-beb7fc7023d8?w=1200&q=80',
+  terroir3: 'https://images.unsplash.com/photo-1474722883778-792e7990302f?w=1200&q=80',
+  vigneron1: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&q=80',
+  vigneron2: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
+  vigneron3: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&q=80',
+};
+
+// Data - Vins avec images fiables
 const featuredWines = [
-  { name: 'Ma Cuvée DOR', cuvee: 'Sables & graviers', appellation: 'AOP Saint-Nicolas-de-Bourgueil', price: '10,80 €', vintage: 2023, image: 'https://assets.evolusite.fr/3/Ma_Cuvée_d_Or_PmEbKNgI6.jpg', badge: 'Accessible', poem: 'Fruits rouges éclatants, légèreté sableuse.' },
-  { name: 'Cuvée Estelle', cuvee: 'Sablonneux · fruité', appellation: 'AOP Saint-Nicolas-de-Bourgueil', price: '11,30 €', vintage: 2024, image: 'https://assets.evolusite.fr/3/Estelle-removebg-preview_AgfXXrabx.png', poem: "Fruité, frais, équilibré — l'âme du Saint-Nicolas." },
-  { name: 'Les Malgagnes', cuvee: 'Argilo-siliceux', appellation: 'AOP Saint-Nicolas-de-Bourgueil', price: '14,00 €', vintage: 2020, image: 'https://assets.evolusite.fr/3/n6uskwu0wt7roib1nj6qns_j1c2qvoS0.png', badge: 'Coup de cœur', poem: "Fin, complexe, élégant — l'ADN de la famille." },
-  { name: 'Les Tuffes', cuvee: 'Argilo-calcaire', appellation: 'AOP Bourgueil', price: '11,30 €', vintage: 2021, image: 'https://assets.evolusite.fr/3/nurx6fwvk2rpgq93bft9s7q_HgtSjCUlH.png', poem: 'Caractère viril, rondeur sur le tuffeau.' },
-  { name: 'Caudalies', cuvee: '12–18 mois en fûts', appellation: 'AOP Bourgueil', price: '18,00 €', vintage: 2021, image: 'https://assets.evolusite.fr/3/Caudalies__2__Zn9svhsus.jpg', badge: 'Prestige', poem: 'Vendange manuelle, élevage en barriques.' },
+  { name: 'Ma Cuvée DOR', cuvee: 'Sables & graviers', appellation: 'AOP Saint-Nicolas-de-Bourgueil', price: '10,80 €', vintage: 2023, image: 'https://images.unsplash.com/photo-1586370434639-0fe43b2d32e6?w=400&q=80', badge: 'Accessible', poem: 'Fruits rouges éclatants, légèreté sableuse.' },
+  { name: 'Cuvée Estelle', cuvee: 'Sablonneux · fruité', appellation: 'AOP Saint-Nicolas-de-Bourgueil', price: '11,30 €', vintage: 2024, image: 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400&q=80', poem: "Fruité, frais, équilibré — l'âme du Saint-Nicolas." },
+  { name: 'Les Malgagnes', cuvee: 'Argilo-siliceux', appellation: 'AOP Saint-Nicolas-de-Bourgueil', price: '14,00 €', vintage: 2020, image: 'https://images.unsplash.com/photo-1584916201218-f4242ceb4809?w=400&q=80', badge: 'Coup de cœur', poem: "Fin, complexe, élégant — l'ADN de la famille." },
+  { name: 'Les Tuffes', cuvee: 'Argilo-calcaire', appellation: 'AOP Bourgueil', price: '11,30 €', vintage: 2021, image: 'https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?w=400&q=80', poem: 'Caractère viril, rondeur sur le tuffeau.' },
+  { name: 'Caudalies', cuvee: '12–18 mois en fûts', appellation: 'AOP Bourgueil', price: '18,00 €', vintage: 2021, image: 'https://images.unsplash.com/photo-1566552881560-0be862a7c445?w=400&q=80', badge: 'Prestige', poem: 'Vendange manuelle, élevage en barriques.' },
 ];
 
 const timeline = [
@@ -58,9 +71,9 @@ const timeline = [
 ];
 
 const vignerons = [
-  { name: 'Estelle Cognard', role: 'Vigneronne', generation: '2ème génération', image: 'https://assets.evolusite.fr/ik-seo/3/estelle-et-rodolphe-maison-cognard.JPG' },
-  { name: 'Rodolphe Cognard', role: 'Vinificateur', generation: '2ème génération', image: 'https://assets.evolusite.fr/ik-seo/3/estelle-et-rodolphe-maison-cognard.JPG' },
-  { name: 'Flavien Cognard', role: 'Vigneron', generation: '3ème génération', image: 'https://assets.evolusite.fr/ik-seo/3/img_4750_6EbPVDf59/img_4750_6EbPVDf59.jpg' },
+  { name: 'Estelle Cognard', role: 'Vigneronne', generation: '2ème génération', image: IMAGES.vigneron1 },
+  { name: 'Rodolphe Cognard', role: 'Vinificateur', generation: '2ème génération', image: IMAGES.vigneron2 },
+  { name: 'Flavien Cognard', role: 'Vigneron', generation: '3ème génération', image: IMAGES.vigneron3 },
 ];
 
 const faqItems = [
@@ -120,12 +133,16 @@ function QuizModal({ onClose }: { onClose: () => void }) {
     else setDone(true);
   };
 
-  const recommended = [...featuredWines].map((w, i) => ({ ...w, score: scores[i] })).sort((a, b) => (b as any).score - (a as any).score).slice(0, 3);
+  type ScoredWine = typeof featuredWines[number] & { score: number };
+  const recommended: ScoredWine[] = [...featuredWines]
+    .map((w, i) => ({ ...w, score: scores[i] }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" style={{ background: 'rgba(18,20,24,0.95)', backdropFilter: 'blur(20px)' }} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div ref={panelRef} className="relative w-full max-w-xl rounded-2xl overflow-hidden" style={{ background: C.bgElevated, border: '1px solid rgba(139,90,107,0.2)' }}>
-        <button className="absolute top-6 right-6 z-10 p-2 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-all" onClick={() => { playClick(); onClose(); }}>
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" style={{ background: 'rgba(245,237,228,0.95)', backdropFilter: 'blur(20px)' }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div ref={panelRef} className="relative w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl" style={{ background: 'white', border: '1px solid rgba(139,58,58,0.15)' }}>
+        <button className="absolute top-6 right-6 z-10 p-2 rounded-full transition-all hover:bg-black/5" style={{ color: C.textMuted }} onClick={() => { playClick(); onClose(); }}>
           <X className="w-5 h-5" />
         </button>
 
@@ -133,10 +150,10 @@ function QuizModal({ onClose }: { onClose: () => void }) {
           <div className="p-10 md:p-12">
             <div className="flex gap-2 mb-10">
               {QUIZ_QUESTIONS.map((_, i) => (
-                <div key={i} className="h-px flex-1" style={{ background: i <= step ? C.accent : 'rgba(245,240,235,0.1)' }} />
+                <div key={i} className="h-px flex-1" style={{ background: i <= step ? C.accent : 'rgba(92,64,51,0.15)' }} />
               ))}
             </div>
-            <p className="text-xs tracking-[0.3em] uppercase mb-2" style={{ color: C.accentLight, fontFamily: F.ui }}>
+            <p className="text-xs tracking-[0.3em] uppercase mb-2" style={{ color: C.sage, fontFamily: F.ui }}>
               Question {step + 1} / {QUIZ_QUESTIONS.length}
             </p>
             <h3 className="text-3xl md:text-4xl font-light mb-10" style={{ fontFamily: F.display, color: C.text }}>
@@ -145,9 +162,9 @@ function QuizModal({ onClose }: { onClose: () => void }) {
             <div className="grid grid-cols-2 gap-4">
               {QUIZ_QUESTIONS[step].options.map((opt, idx) => (
                 <Magnetic key={idx} strength={0.1}>
-                  <button onClick={() => pick(opt.scores)} className="p-6 rounded-xl text-left transition-all duration-300 hover:bg-white/5 group" style={{ background: 'rgba(245,240,235,0.03)', border: '1px solid rgba(245,240,235,0.08)' }}>
+                  <button onClick={() => pick(opt.scores)} className="p-6 rounded-xl text-left transition-all duration-300 hover:shadow-lg group" style={{ background: 'white', border: '1px solid rgba(92,64,51,0.1)' }}>
                     <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">{opt.icon}</div>
-                    <p className="text-sm font-medium" style={{ color: 'rgba(245,240,235,0.8)', fontFamily: F.ui }}>{opt.label}</p>
+                    <p className="text-sm font-medium" style={{ color: C.text, fontFamily: F.ui }}>{opt.label}</p>
                   </button>
                 </Magnetic>
               ))}
@@ -155,22 +172,22 @@ function QuizModal({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <div className="p-10 md:p-12">
-            <p className="text-xs tracking-[0.3em] uppercase mb-2" style={{ color: C.accentLight, fontFamily: F.ui }}>Votre sélection</p>
+            <p className="text-xs tracking-[0.3em] uppercase mb-2" style={{ color: C.sage, fontFamily: F.ui }}>Votre sélection</p>
             <h3 className="text-3xl font-light mb-8" style={{ fontFamily: F.display, color: C.text }}>Notre recommandation</h3>
             <div className="space-y-4 mb-8">
-              {recommended.map((wine: any, i: number) => (
-                <div key={i} className="flex items-center gap-4 p-4 rounded-xl" style={{ background: 'rgba(245,240,235,0.03)', border: '1px solid rgba(245,240,235,0.06)' }}>
-                  <img src={wine.image} alt={wine.name} className="w-14 h-20 object-contain" />
+              {recommended.map((wine, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 rounded-xl" style={{ background: C.bg, border: '1px solid rgba(92,64,51,0.08)' }}>
+                  <img src={wine.image} alt={wine.name} className="w-14 h-20 object-cover rounded" />
                   <div className="flex-1">
-                    <p className="text-xs mb-1" style={{ color: C.accentLight, fontFamily: F.ui }}>{wine.appellation}</p>
+                    <p className="text-xs mb-1" style={{ color: C.sage, fontFamily: F.ui }}>{wine.appellation}</p>
                     <p className="font-light text-lg" style={{ fontFamily: F.display, color: C.text }}>{wine.name}</p>
-                    <p className="text-xs" style={{ color: 'rgba(245,240,235,0.4)' }}>{wine.cuvee}</p>
+                    <p className="text-xs" style={{ color: C.textMuted }}>{wine.cuvee}</p>
                   </div>
-                  <p className="text-xl font-light" style={{ fontFamily: F.display, color: C.accentLight }}>{wine.price}</p>
+                  <p className="text-xl font-light" style={{ fontFamily: F.display, color: C.accent }}>{wine.price}</p>
                 </div>
               ))}
             </div>
-            <a href="https://vins-stnicolas-bourgueil-cognard.fr/nos-cuvees" target="_blank" rel="noopener" onClick={playClick} className="block w-full py-4 rounded-xl text-sm tracking-[0.15em] uppercase text-center" style={{ fontFamily: F.ui, background: C.accent, color: C.text }}>
+            <a href="https://vins-stnicolas-bourgueil-cognard.fr/nos-cuvees" target="_blank" rel="noopener noreferrer" onClick={playClick} className="block w-full py-4 rounded-xl text-sm tracking-[0.15em] uppercase text-center text-white" style={{ fontFamily: F.ui, background: C.accent }}>
               Commander en ligne
             </a>
           </div>
@@ -183,7 +200,12 @@ function QuizModal({ onClose }: { onClose: () => void }) {
 function AudioToggle() {
   const { isMuted, toggleMute, playClick } = useAudio();
   return (
-    <button onClick={() => { playClick(); toggleMute(); }} className="fixed top-6 right-6 z-[300] w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110" style={{ background: 'rgba(245,240,235,0.05)', backdropFilter: 'blur(10px)' }}>
+    <button
+      onClick={() => { playClick(); toggleMute(); }}
+      aria-label={isMuted ? 'Activer le son' : 'Couper le son'}
+      className="fixed top-6 right-6 z-[300] w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+      style={{ background: 'rgba(92,64,51,0.08)' }}
+    >
       {isMuted ? <VolumeX className="w-4 h-4" style={{ color: C.text }} /> : <Volume2 className="w-4 h-4" style={{ color: C.text }} />}
     </button>
   );
@@ -196,7 +218,7 @@ export default function App() {
   const mainRef = useRef<HTMLDivElement>(null);
   const { playHover, playClick } = useAudio();
 
-  useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
+  const handleLoaderDone = useCallback(() => setLoaded(true), []);
 
   useEffect(() => {
     if (!loaded) return;
@@ -214,84 +236,83 @@ export default function App() {
   return (
     <SmoothScroll>
       <>
-        <Loader onDone={() => {}} />
+        <Loader onDone={handleLoaderDone} />
         <CustomCursor />
         <FilmGrain />
         <ScrollProgress />
         <AudioToggle />
         {quizOpen && <QuizModal onClose={() => setQuizOpen(false)} />}
 
-        <button onClick={() => { playClick(); setQuizOpen(true); }} onMouseEnter={playHover} className="fixed bottom-8 right-8 z-[280] w-16 h-16 rounded-full flex items-center justify-center group transition-transform hover:scale-110" style={{ background: C.accent, boxShadow: '0 10px 40px -10px rgba(139,90,107,0.6)' }}>
+        <button onClick={() => { playClick(); setQuizOpen(true); }} onMouseEnter={playHover} className="fixed bottom-8 right-8 z-[280] w-16 h-16 rounded-full flex items-center justify-center group transition-transform hover:scale-110 shadow-lg" style={{ background: C.accent }}>
           <span className="text-2xl">🍷</span>
-          <span className="absolute -top-12 right-0 bg-white text-black text-xs px-4 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontFamily: F.ui }}>Trouvez votre vin</span>
+          <span className="absolute -top-12 right-0 bg-white text-black text-xs px-4 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" style={{ fontFamily: F.ui }}>Trouvez votre vin</span>
         </button>
 
         <div ref={mainRef} className="min-h-screen" style={{ background: C.bg, color: C.text, fontFamily: F.ui }}>
           
-          <nav className="fixed top-0 left-0 w-full z-50 px-8 md:px-16 py-6 flex justify-between items-center mix-blend-difference">
-            <a href="#" onMouseEnter={playHover} onClick={playClick} className="text-sm tracking-[0.2em] uppercase font-medium" style={{ fontFamily: F.ui }}>Cognard</a>
+          <nav className="fixed top-0 left-0 w-full z-50 px-6 md:px-16 py-6 flex justify-between items-center bg-gradient-to-b from-[#F5EDE4] via-[#F5EDE4]/90 to-transparent">
+            <a href="#" onMouseEnter={playHover} onClick={playClick} className="text-sm tracking-[0.2em] uppercase font-medium" style={{ fontFamily: F.ui, color: C.text }}>Cognard</a>
             <div className="hidden md:flex items-center gap-12">
               {['Histoire', 'Vins', 'Vignerons', 'Contact'].map((item) => (
-                <a key={item} href={`#${item.toLowerCase()}`} onMouseEnter={playHover} onClick={playClick} className="text-xs tracking-[0.15em] uppercase text-white/60 hover:text-white transition-colors relative group" style={{ fontFamily: F.ui }}>
+                <a key={item} href={`#${item.toLowerCase()}`} onMouseEnter={playHover} onClick={playClick} className="text-xs tracking-[0.15em] uppercase transition-colors relative group" style={{ fontFamily: F.ui, color: C.textMuted }}>
                   {item}
-                  <span className="absolute -bottom-1 left-0 w-0 h-px bg-white group-hover:w-full transition-all duration-300" />
+                  <span className="absolute -bottom-1 left-0 w-0 h-px group-hover:w-full transition-all duration-300" style={{ background: C.accent }} />
                 </a>
               ))}
             </div>
             <Magnetic strength={0.2}>
-              <a href="https://vins-stnicolas-bourgueil-cognard.fr" target="_blank" rel="noopener" onMouseEnter={playHover} onClick={playClick} className="hidden md:flex items-center gap-2 text-xs tracking-[0.1em] uppercase px-6 py-3 rounded-full border border-white/20 hover:bg-white hover:text-black transition-all" style={{ fontFamily: F.ui }}>
+              <a href="https://vins-stnicolas-bourgueil-cognard.fr" target="_blank" rel="noopener noreferrer" onMouseEnter={playHover} onClick={playClick} className="hidden md:flex items-center gap-2 text-xs tracking-[0.1em] uppercase px-6 py-3 rounded-full border transition-all hover:bg-[#5C4033] hover:text-white" style={{ fontFamily: F.ui, borderColor: 'rgba(92,64,51,0.3)', color: C.text }}>
                 Boutique <ArrowUpRight className="w-3 h-3" />
               </a>
             </Magnetic>
-            <button className="md:hidden" onClick={() => { playClick(); setMenuOpen(true); }}><Menu className="w-6 h-6" /></button>
+            <button className="md:hidden" aria-label="Ouvrir le menu" onClick={() => { playClick(); setMenuOpen(true); }}><Menu className="w-6 h-6" style={{ color: C.text }} /></button>
           </nav>
 
           {menuOpen && (
             <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-8" style={{ background: C.bg }}>
-              <button className="absolute top-6 right-8" onClick={() => { playClick(); setMenuOpen(false); }}><X className="w-6 h-6" /></button>
+              <button className="absolute top-6 right-8" aria-label="Fermer le menu" onClick={() => { playClick(); setMenuOpen(false); }}><X className="w-6 h-6" style={{ color: C.text }} /></button>
               {['Histoire', 'Vins', 'Vignerons', 'Contact'].map((item) => (
-                <a key={item} href={`#${item.toLowerCase()}`} onClick={() => { playClick(); setMenuOpen(false); }} className="text-4xl font-light" style={{ fontFamily: F.display }}>{item}</a>
+                <a key={item} href={`#${item.toLowerCase()}`} onClick={() => { playClick(); setMenuOpen(false); }} className="text-4xl font-light" style={{ fontFamily: F.display, color: C.text }}>{item}</a>
               ))}
             </div>
           )}
 
           <Hero21st />
-
           <Marquee />
 
-          <section id="histoire" className="py-32 md:py-48 px-6 md:px-16">
+          <section id="histoire" className="py-24 md:py-40 px-6 md:px-16">
             <div className="max-w-7xl mx-auto">
-              <div className="grid md:grid-cols-2 gap-16 md:gap-24 items-center">
+              <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
                 <div>
                   <div className="reveal-line w-16 h-px mb-8" style={{ background: C.accent }} />
-                  <p className="reveal-up text-xs tracking-[0.3em] uppercase mb-6" style={{ color: C.accentLight }}>Notre Histoire</p>
-                  <h2 className="text-4xl md:text-6xl font-light leading-[1.1] mb-8" style={{ fontFamily: F.display }}>
+                  <p className="reveal-up text-xs tracking-[0.3em] uppercase mb-6" style={{ color: C.sage }}>Notre Histoire</p>
+                  <h2 className="text-3xl md:text-5xl lg:text-6xl font-light leading-[1.1] mb-8" style={{ fontFamily: F.display, color: C.text }}>
                     <EnhancedTextReveal splitBy="words">50 ans de passion familiale</EnhancedTextReveal>
                   </h2>
-                  <p className="reveal-up text-lg leading-relaxed mb-8" style={{ color: C.textMuted }}>
+                  <p className="reveal-up text-base md:text-lg leading-relaxed mb-8" style={{ color: C.textMuted }}>
                     En 1973, Lydie et Max Cognard plantent leur premier hectare de Cabernet Franc à Saint-Nicolas-de-Bourgueil. Ce cépage unique, ces terres de tuffeau, deviendront l'héritage d'une saga familiale.
                   </p>
-                  <div className="reveal-up grid grid-cols-3 gap-8">
+                  <div className="reveal-up grid grid-cols-3 gap-6">
                     {[{ num: '50+', label: 'Années' }, { num: '3', label: 'Générations' }, { num: '15', label: 'Hectares' }].map((stat) => (
                       <div key={stat.label}>
-                        <p className="text-3xl md:text-4xl font-light mb-1" style={{ fontFamily: F.display, color: C.accentLight }}>{stat.num}</p>
+                        <p className="text-2xl md:text-3xl font-light mb-1" style={{ fontFamily: F.display, color: C.accent }}>{stat.num}</p>
                         <p className="text-xs tracking-[0.2em] uppercase" style={{ color: C.textMuted, fontFamily: F.ui }}>{stat.label}</p>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="reveal-up">
-                  <ParallaxImage src="https://assets.evolusite.fr/ik-seo/3/xwgsun72vacozjglyp9yw_gqH-6nzR1/estelle-et-rodolphe-maison-cognard.JPG" alt="Famille Cognard" className="rounded-2xl aspect-[4/5]" />
+                  <ParallaxImage src={IMAGES.family} alt="Famille Cognard" className="rounded-2xl aspect-[4/5] shadow-xl" />
                 </div>
               </div>
 
-              <div className="mt-32">
-                <div className="reveal-line w-full h-px mb-16" style={{ background: 'rgba(245,240,235,0.1)' }} />
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+              <div className="mt-24 md:mt-32">
+                <div className="reveal-line w-full h-px mb-12 md:mb-16" style={{ background: 'rgba(92,64,51,0.1)' }} />
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8">
                   {timeline.map((item, i) => (
                     <div key={i} className="reveal-up">
-                      <p className="text-sm tracking-[0.2em] uppercase mb-2" style={{ color: C.accentLight, fontFamily: F.ui }}>{item.year}</p>
-                      <p className="text-lg font-light mb-2" style={{ fontFamily: F.display }}>{item.title}</p>
+                      <p className="text-sm tracking-[0.2em] uppercase mb-2" style={{ color: C.accent, fontFamily: F.ui }}>{item.year}</p>
+                      <p className="text-lg md:text-xl font-light mb-2" style={{ fontFamily: F.display, color: C.text }}>{item.title}</p>
                       <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>{item.text}</p>
                     </div>
                   ))}
@@ -300,23 +321,23 @@ export default function App() {
             </div>
           </section>
 
-          <TerroirParallax />
+          <TerroirParallax images={[IMAGES.terroir1, IMAGES.terroir2, IMAGES.terroir3]} />
           <ProcessSteps />
 
-          <section id="vins" className="py-32 md:py-48 px-6 md:px-16" style={{ background: C.bgElevated }}>
+          <section id="vins" className="py-24 md:py-40 px-6 md:px-16" style={{ background: C.bgElevated }}>
             <div className="max-w-7xl mx-auto">
-              <div className="flex flex-col md:flex-row md:items-end justify-between mb-20">
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 md:mb-20">
                 <div>
                   <div className="reveal-line w-16 h-px mb-8" style={{ background: C.accent }} />
-                  <p className="reveal-up text-xs tracking-[0.3em] uppercase mb-4" style={{ color: C.accentLight }}>Nos Cuvées</p>
-                  <h2 className="text-4xl md:text-6xl font-light" style={{ fontFamily: F.display }}>
+                  <p className="reveal-up text-xs tracking-[0.3em] uppercase mb-4" style={{ color: C.sage }}>Nos Cuvées</p>
+                  <h2 className="text-3xl md:text-5xl lg:text-6xl font-light" style={{ fontFamily: F.display, color: C.text }}>
                     <EnhancedTextReveal splitBy="words">100% Cabernet Franc</EnhancedTextReveal>
                   </h2>
                 </div>
-                <p className="reveal-up max-w-sm mt-6 md:mt-0" style={{ color: C.textMuted }}>Cinq cuvées, cinq expressions du même cépage sur des terroirs différents.</p>
+                <p className="reveal-up max-w-sm mt-6 md:mt-0 text-sm md:text-base" style={{ color: C.textMuted }}>Cinq cuvées, cinq expressions du même cépage sur des terroirs différents.</p>
               </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 {featuredWines.map((wine, i) => (
                   <div key={i} className="reveal-up" onMouseEnter={playHover}>
                     <WineCard wine={wine} />
@@ -328,27 +349,27 @@ export default function App() {
 
           <Awards />
 
-          <section id="vignerons" className="py-32 md:py-48 px-6 md:px-16">
+          <section id="vignerons" className="py-24 md:py-40 px-6 md:px-16">
             <div className="max-w-7xl mx-auto">
-              <div className="text-center mb-20">
+              <div className="text-center mb-16 md:mb-20">
                 <div className="reveal-line w-16 h-px mx-auto mb-8" style={{ background: C.accent }} />
-                <p className="reveal-up text-xs tracking-[0.3em] uppercase mb-4" style={{ color: C.accentLight }}>La Famille</p>
-                <h2 className="text-4xl md:text-6xl font-light" style={{ fontFamily: F.display }}>
+                <p className="reveal-up text-xs tracking-[0.3em] uppercase mb-4" style={{ color: C.sage }}>La Famille</p>
+                <h2 className="text-3xl md:text-5xl lg:text-6xl font-light" style={{ fontFamily: F.display, color: C.text }}>
                   <EnhancedTextReveal splitBy="words">Les vignerons</EnhancedTextReveal>
                 </h2>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-8">
+              <div className="grid md:grid-cols-3 gap-6 md:gap-8">
                 {vignerons.map((v, i) => (
                   <div key={i} className="reveal-up group">
-                    <div className="relative aspect-[3/4] mb-6 overflow-hidden rounded-2xl">
+                    <div className="relative aspect-[3/4] mb-6 overflow-hidden rounded-2xl shadow-lg">
                       <img src={v.image} alt={v.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                       <div className="absolute bottom-6 left-6">
                         <p className="text-xs tracking-[0.2em] uppercase" style={{ color: C.accentLight, fontFamily: F.ui }}>{v.generation}</p>
                       </div>
                     </div>
-                    <h3 className="text-2xl font-light mb-1" style={{ fontFamily: F.display }}>{v.name}</h3>
+                    <h3 className="text-xl md:text-2xl font-light mb-1" style={{ fontFamily: F.display, color: C.text }}>{v.name}</h3>
                     <p className="text-sm" style={{ color: C.textMuted, fontFamily: F.ui }}>{v.role}</p>
                   </div>
                 ))}
@@ -356,12 +377,12 @@ export default function App() {
             </div>
           </section>
 
-          <section className="py-32 md:py-48 px-6 md:px-16" style={{ background: C.bgElevated }}>
+          <section className="py-24 md:py-40 px-6 md:px-16" style={{ background: C.bgElevated }}>
             <div className="max-w-3xl mx-auto">
-              <div className="text-center mb-16">
-                <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: C.accentLight }}>FAQ</p>
-                <h2 className="text-4xl md:text-5xl font-light" style={{ fontFamily: F.display }}>
-                  Questions <em className="italic" style={{ color: C.accentLight }}>fréquentes</em>
+              <div className="text-center mb-12 md:mb-16">
+                <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: C.sage }}>FAQ</p>
+                <h2 className="text-3xl md:text-5xl font-light" style={{ fontFamily: F.display, color: C.text }}>
+                  Questions <em className="italic" style={{ color: C.accent }}>fréquentes</em>
                 </h2>
               </div>
               <Accordion items={faqItems} />
@@ -370,25 +391,25 @@ export default function App() {
 
           <Newsletter />
 
-          <section className="py-32 md:py-48 px-6 md:px-16 relative overflow-hidden">
+          <section className="py-24 md:py-40 px-6 md:px-16 relative overflow-hidden" style={{ background: C.bg }}>
             <div className="absolute inset-0 z-0">
-              <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 50% at 50% 50%, ${C.accent}20, transparent)` }} />
+              <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 50% at 50% 50%, ${C.accent}10, transparent)` }} />
             </div>
             <div className="max-w-4xl mx-auto text-center relative z-10">
-              <h2 className="text-4xl md:text-7xl font-light mb-8" style={{ fontFamily: F.display }}>
+              <h2 className="text-3xl md:text-5xl lg:text-7xl font-light mb-8" style={{ fontFamily: F.display, color: C.text }}>
                 <EnhancedTextReveal splitBy="words">Venez déguster au domaine</EnhancedTextReveal>
               </h2>
-              <p className="reveal-up text-lg mb-12 max-w-xl mx-auto" style={{ color: C.textMuted }}>
+              <p className="reveal-up text-base md:text-lg mb-12 max-w-xl mx-auto" style={{ color: C.textMuted }}>
                 Caveau de dégustation ouvert toute la semaine. Découvrez nos vins au cœur du vignoble.
               </p>
               <div className="reveal-up flex flex-col sm:flex-row gap-4 justify-center">
                 <Magnetic strength={0.15}>
-                  <a href="https://vins-stnicolas-bourgueil-cognard.fr" target="_blank" rel="noopener" onMouseEnter={playHover} onClick={playClick} className="inline-flex items-center gap-3 px-8 py-4 rounded-full text-sm tracking-[0.15em] uppercase" style={{ fontFamily: F.ui, background: C.accent, color: C.text }}>
+                  <a href="https://vins-stnicolas-bourgueil-cognard.fr" target="_blank" rel="noopener noreferrer" onMouseEnter={playHover} onClick={playClick} className="inline-flex items-center gap-3 px-8 py-4 rounded-full text-sm tracking-[0.15em] uppercase text-white shadow-lg transition-transform hover:scale-105" style={{ fontFamily: F.ui, background: C.accent }}>
                     <ShoppingBag className="w-4 h-4" /> Boutique en ligne
                   </a>
                 </Magnetic>
                 <Magnetic strength={0.15}>
-                  <a href="https://www.instagram.com/vinscognard/" target="_blank" rel="noopener" onMouseEnter={playHover} onClick={playClick} className="inline-flex items-center gap-3 px-8 py-4 rounded-full text-sm tracking-[0.15em] uppercase border border-white/20 hover:bg-white/10 transition-all" style={{ fontFamily: F.ui }}>
+                  <a href="https://www.instagram.com/vinscognard/" target="_blank" rel="noopener noreferrer" onMouseEnter={playHover} onClick={playClick} className="inline-flex items-center gap-3 px-8 py-4 rounded-full text-sm tracking-[0.15em] uppercase border transition-all hover:bg-[#5C4033] hover:text-white" style={{ fontFamily: F.ui, borderColor: 'rgba(92,64,51,0.3)', color: C.text }}>
                     Instagram
                   </a>
                 </Magnetic>
@@ -396,34 +417,34 @@ export default function App() {
             </div>
           </section>
 
-          <footer id="contact" className="py-20 px-6 md:px-16 border-t" style={{ background: C.bg, borderColor: 'rgba(245,240,235,0.06)' }}>
+          <footer id="contact" className="py-16 md:py-20 px-6 md:px-16 border-t" style={{ background: C.bg, borderColor: 'rgba(92,64,51,0.1)' }}>
             <div className="max-w-7xl mx-auto">
-              <div className="grid md:grid-cols-4 gap-12 mb-16">
+              <div className="grid md:grid-cols-4 gap-10 md:gap-12 mb-12 md:mb-16">
                 <div className="md:col-span-2">
-                  <p className="text-3xl font-light mb-4" style={{ fontFamily: F.display }}>Famille Cognard</p>
+                  <p className="text-2xl md:text-3xl font-light mb-4" style={{ fontFamily: F.display, color: C.text }}>Famille Cognard</p>
                   <p className="text-sm leading-relaxed max-w-sm" style={{ color: C.textMuted }}>
                     1379 route du Carroi Taveau<br />37140 Saint-Nicolas-de-Bourgueil<br />02 47 97 76 88
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs tracking-[0.2em] uppercase mb-4" style={{ color: C.accentLight }}>Navigation</p>
+                  <p className="text-xs tracking-[0.2em] uppercase mb-4" style={{ color: C.accent }}>Navigation</p>
                   <div className="space-y-2">
                     {['Histoire', 'Vins', 'Vignerons', 'Contact'].map((item) => (
-                      <a key={item} href={`#${item.toLowerCase()}`} onMouseEnter={playHover} onClick={playClick} className="block text-sm hover:text-white transition-colors" style={{ color: C.textMuted }}>{item}</a>
+                      <a key={item} href={`#${item.toLowerCase()}`} onMouseEnter={playHover} onClick={playClick} className="block text-sm transition-colors hover:text-[#8B3A3A]" style={{ color: C.textMuted }}>{item}</a>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs tracking-[0.2em] uppercase mb-4" style={{ color: C.accentLight }}>Réseaux</p>
+                  <p className="text-xs tracking-[0.2em] uppercase mb-4" style={{ color: C.accent }}>Réseaux</p>
                   <div className="space-y-2">
-                    <a href="https://www.instagram.com/vinscognard/" target="_blank" rel="noopener" onMouseEnter={playHover} onClick={playClick} className="block text-sm hover:text-white transition-colors" style={{ color: C.textMuted }}>Instagram</a>
-                    <a href="https://www.facebook.com/vinscognard/" target="_blank" rel="noopener" onMouseEnter={playHover} onClick={playClick} className="block text-sm hover:text-white transition-colors" style={{ color: C.textMuted }}>Facebook</a>
+                    <a href="https://www.instagram.com/vinscognard/" target="_blank" rel="noopener noreferrer" onMouseEnter={playHover} onClick={playClick} className="block text-sm transition-colors hover:text-[#8B3A3A]" style={{ color: C.textMuted }}>Instagram</a>
+                    <a href="https://www.facebook.com/vinscognard/" target="_blank" rel="noopener noreferrer" onMouseEnter={playHover} onClick={playClick} className="block text-sm transition-colors hover:text-[#8B3A3A]" style={{ color: C.textMuted }}>Facebook</a>
                   </div>
                 </div>
               </div>
-              <div className="pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4" style={{ borderColor: 'rgba(245,240,235,0.06)' }}>
-                <p className="text-xs tracking-widest" style={{ color: 'rgba(245,240,235,0.25)', fontFamily: F.ui }}>© 2026 Famille Cognard · Domaine viticole depuis 1973</p>
-                <p className="text-xs" style={{ color: 'rgba(245,240,235,0.2)', fontFamily: F.ui }}>L'abus d'alcool est dangereux pour la santé</p>
+              <div className="pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4" style={{ borderColor: 'rgba(92,64,51,0.1)' }}>
+                <p className="text-xs tracking-widest" style={{ color: 'rgba(92,64,51,0.5)', fontFamily: F.ui }}>© 2026 Famille Cognard · Domaine viticole depuis 1973</p>
+                <p className="text-xs" style={{ color: 'rgba(92,64,51,0.4)', fontFamily: F.ui }}>L'abus d'alcool est dangereux pour la santé</p>
               </div>
             </div>
           </footer>

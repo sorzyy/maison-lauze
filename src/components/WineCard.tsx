@@ -1,16 +1,8 @@
 import { useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { ShoppingBag } from 'lucide-react';
-
-const F = {
-  display: "'Cormorant Garamond', Georgia, serif",
-  ui: "'Inter', -apple-system, sans-serif",
-};
-
-const C = {
-  accent: '#7a1a1a',
-  accentLight: '#c4402a',
-};
+import { ShoppingBag, Star } from 'lucide-react';
+import { Magnetic } from './Magnetic';
+import { useAudio } from '@/context/AudioContext';
 
 interface Wine {
   name: string;
@@ -20,22 +12,28 @@ interface Wine {
   vintage: number;
   image: string;
   badge?: string;
-  poem: string;
+  poem?: string;
 }
 
-interface WineCardProps {
-  wine: Wine;
-}
+const C = {
+  accent: '#8B3A3A',
+  accentLight: '#D4A574',
+  text: '#5C4033',
+  bg: '#F5EDE4',
+  bgElevated: '#FDF8F3',
+  sage: '#7A8B6E',
+  textMuted: 'rgba(92,64,51,0.6)',
+};
 
-export function WineCard({ wine }: WineCardProps) {
+export function WineCard({ wine }: { wine: Wine }) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const { playHover, playClick } = useAudio();
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (e: React.MouseEvent) => {
     const card = cardRef.current;
     if (!card) return;
-
+    
     const rect = card.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -43,182 +41,91 @@ export function WineCard({ wine }: WineCardProps) {
     gsap.to(card, {
       rotateY: x * 10,
       rotateX: -y * 10,
-      duration: 0.5,
-      ease: 'power2.out'
+      duration: 0.3,
+      ease: 'power2.out',
     });
-
-    if (imageRef.current) {
-      gsap.to(imageRef.current, {
-        x: x * 20,
-        y: y * 20,
-        duration: 0.5,
-        ease: 'power2.out'
-      });
-    }
   };
 
   const handleMouseLeave = () => {
     const card = cardRef.current;
     if (!card) return;
-
+    
     gsap.to(card, {
       rotateY: 0,
       rotateX: 0,
-      duration: 0.7,
-      ease: 'elastic.out(1, 0.5)'
+      duration: 0.5,
+      ease: 'power2.out',
     });
-
-    if (imageRef.current) {
-      gsap.to(imageRef.current, {
-        x: 0,
-        y: 0,
-        duration: 0.7,
-        ease: 'elastic.out(1, 0.5)'
-      });
-    }
-
     setIsHovered(false);
   };
 
   return (
     <div
       ref={cardRef}
-      className="group cursor-pointer"
+      className="group relative rounded-2xl overflow-hidden cursor-pointer"
       style={{ 
         perspective: '1000px',
-        transformStyle: 'preserve-3d'
+        background: C.bgElevated,
+        border: '1px solid rgba(92,64,51,0.1)'
       }}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => { setIsHovered(true); playHover(); }}
       onMouseLeave={handleMouseLeave}
     >
-      <div 
-        className="relative aspect-[3/4] mb-6 overflow-hidden rounded-2xl transition-all duration-500"
-        style={{ 
-          background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          transformStyle: 'preserve-3d',
-          boxShadow: isHovered 
-            ? '0 25px 50px -12px rgba(122,26,26,0.4), 0 0 0 1px rgba(122,26,26,0.3)' 
-            : '0 10px 30px -15px rgba(0,0,0,0.5)'
-        }}
-      >
-        {/* Background glow on hover */}
-        <div 
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
-          style={{
-            background: 'radial-gradient(circle at 50% 50%, rgba(122,26,26,0.15) 0%, transparent 70%)'
-          }}
-        />
-        
-        <img 
-          ref={imageRef}
-          src={wine.image} 
-          alt={wine.name}
-          className="absolute inset-0 w-full h-full object-contain p-8 transition-transform duration-700"
-          style={{ 
-            filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.5))',
-            transform: `translateZ(50px)`
-          }}
-        />
-        
-        {wine.badge && (
-          <span 
-            className="absolute top-4 left-4 text-xs px-4 py-2 rounded-full z-10 transition-transform duration-500"
-            style={{ 
-              background: C.accent, 
-              fontFamily: F.ui,
-              transform: isHovered ? 'translateZ(80px)' : 'translateZ(30px)'
-            }}
-          >
-            {wine.badge}
-          </span>
-        )}
-
-        {/* Hover overlay with poem */}
-        <div 
-          className="absolute inset-0 flex flex-col justify-end p-6 transition-all duration-500"
-          style={{
-            background: isHovered 
-              ? 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)' 
-              : 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 40%)',
-            opacity: isHovered ? 1 : 0.7,
-            transform: `translateZ(40px)`
-          }}
-        >
-          <p 
-            className="text-sm italic text-white/90 mb-4 transition-all duration-500"
-            style={{ 
-              fontFamily: F.display,
-              transform: isHovered ? 'translateY(0)' : 'translateY(20px)',
-              opacity: isHovered ? 1 : 0
-            }}
-          >
-            "{wine.poem}"
-          </p>
-          
-          <a
-            href="https://vins-stnicolas-bourgueil-cognard.fr/nos-cuvees"
-            target="_blank"
-            rel="noopener"
-            className="inline-flex items-center gap-2 text-xs tracking-[0.15em] uppercase px-4 py-3 rounded-full w-fit transition-all duration-300 hover:scale-105"
-            style={{ 
-              background: C.accent,
-              fontFamily: F.ui,
-              transform: isHovered ? 'translateY(0) translateZ(60px)' : 'translateY(20px) translateZ(40px)',
-              opacity: isHovered ? 1 : 0
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ShoppingBag className="w-3 h-3" /> Commander
-          </a>
+      {/* Badge */}
+      {wine.badge && (
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-1 px-3 py-1.5 rounded-full"
+          style={{ background: C.accent }}>
+          <Star className="w-3 h-3 text-white fill-white" />
+          <span className="text-xs tracking-wide text-white" style={{ fontFamily: "'Inter', sans-serif" }}>{wine.badge}</span>
         </div>
+      )}
 
-        {/* Vintage badge */}
-        <div 
-          className="absolute top-4 right-4 text-xs px-3 py-1.5 rounded-md transition-all duration-500"
+      {/* Image Container */}
+      <div className="relative h-80 overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.bg}, ${C.bgElevated})` }}>
+        <img
+          src={wine.image}
+          alt={wine.name}
+          className="w-full h-full object-contain p-6 transition-transform duration-500"
           style={{ 
-            background: 'rgba(0,0,0,0.6)', 
-            backdropFilter: 'blur(10px)',
-            fontFamily: F.ui,
-            transform: isHovered ? 'translateZ(60px)' : 'translateZ(30px)'
+            transform: isHovered ? 'scale(1.1) translateY(-10px)' : 'scale(1)'
           }}
-        >
-          {wine.vintage}
+        />
+        
+        {/* Hover Overlay */}
+        <div className={`absolute inset-0 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+          style={{ background: 'linear-gradient(to top, rgba(139,58,58,0.9), transparent)' }}>
+          <div className="absolute bottom-0 left-0 right-0 p-6">
+            <p className="text-sm leading-relaxed text-white/90 mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+              {wine.poem}
+            </p>
+            <Magnetic strength={0.2}>
+              <a 
+                href="https://vins-stnicolas-bourgueil-cognard.fr" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={playClick}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs tracking-wide uppercase"
+                style={{ background: 'white', color: C.accent, fontFamily: "'Inter', sans-serif" }}
+              >
+                <ShoppingBag className="w-3 h-3" />
+                Commander
+              </a>
+            </Magnetic>
+          </div>
         </div>
       </div>
 
-      <div style={{ transform: 'translateZ(30px)' }}>
-        <p 
-          className="text-xs tracking-[0.2em] uppercase mb-2 transition-colors duration-300"
-          style={{ 
-            color: isHovered ? C.accentLight : 'rgba(196,64,42,0.7)', 
-            fontFamily: F.ui 
-          }}
-        >
-          {wine.appellation}
-        </p>
-        <h3 
-          className="text-2xl font-light mb-1 transition-transform duration-500"
-          style={{ 
-            fontFamily: F.display,
-            transform: isHovered ? 'translateX(5px)' : 'translateX(0)'
-          }}
-        >
-          {wine.name}
-        </h3>
-        <p className="text-sm text-white/40 mb-3">{wine.cuvee}</p>
-        <p 
-          className="text-xl font-light transition-all duration-300"
-          style={{ 
-            fontFamily: F.display, 
-            color: C.accentLight,
-            transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-            transformOrigin: 'left center'
-          }}
-        >
-          {wine.price}
-        </p>
+      {/* Content */}
+      <div className="p-6">
+        <p className="text-xs tracking-[0.15em] uppercase mb-2" style={{ color: C.sage }}>{wine.appellation}</p>
+        <h3 className="text-2xl font-light mb-1" style={{ fontFamily: "'Cormorant Garamond', serif", color: C.text }}>{wine.name}</h3>
+        <p className="text-sm mb-4" style={{ color: C.textMuted }}>{wine.cuvee}</p>
+        
+        <div className="flex items-center justify-between">
+          <span className="text-xl font-light" style={{ fontFamily: "'Cormorant Garamond', serif", color: C.accent }}>{wine.price}</span>
+          <span className="text-xs px-2 py-1 rounded" style={{ background: `${C.sage}20`, color: C.sage }}>{wine.vintage}</span>
+        </div>
       </div>
     </div>
   );
