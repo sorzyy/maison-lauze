@@ -18,7 +18,9 @@ import { Awards } from '@/components/Awards';
 import { Newsletter } from '@/components/Newsletter';
 import { ScrollProgress } from '@/components/ScrollProgress';
 import { Hero21st } from '@/components/Hero21st';
+import { ContactForm } from '@/components/ContactForm';
 import { useAudio } from '@/context/AudioContext';
+import { AnimatedCounter } from '@/components/AnimatedCounter';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -215,10 +217,17 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
   const { playHover, playClick } = useAudio();
 
   const handleLoaderDone = useCallback(() => setLoaded(true), []);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     if (!loaded) return;
@@ -250,7 +259,7 @@ export default function App() {
 
         <div ref={mainRef} className="min-h-screen" style={{ background: C.bg, color: C.text, fontFamily: F.ui }}>
           
-          <nav className="fixed top-0 left-0 w-full z-50 px-6 md:px-16 py-6 flex justify-between items-center bg-gradient-to-b from-[#F5EDE4] via-[#F5EDE4]/90 to-transparent">
+          <nav className={`fixed top-0 left-0 w-full z-50 px-6 md:px-16 py-6 flex justify-between items-center transition-all duration-300 ${scrolled ? 'bg-[#F5EDE4]/95 shadow-sm' : 'bg-gradient-to-b from-[#F5EDE4] via-[#F5EDE4]/90 to-transparent'}`} style={scrolled ? { backdropFilter: 'blur(12px)'} : {}}>
             <a href="#" onMouseEnter={playHover} onClick={playClick} className="text-sm tracking-[0.2em] uppercase font-medium" style={{ fontFamily: F.ui, color: C.text }}>Cognard</a>
             <div className="hidden md:flex items-center gap-12">
               {['Histoire', 'Vins', 'Vignerons', 'Contact'].map((item) => (
@@ -293,12 +302,15 @@ export default function App() {
                     En 1973, Lydie et Max Cognard plantent leur premier hectare de Cabernet Franc à Saint-Nicolas-de-Bourgueil. Ce cépage unique, ces terres de tuffeau, deviendront l'héritage d'une saga familiale.
                   </p>
                   <div className="reveal-up grid grid-cols-3 gap-6">
-                    {[{ num: '50+', label: 'Années' }, { num: '3', label: 'Générations' }, { num: '15', label: 'Hectares' }].map((stat) => (
-                      <div key={stat.label}>
-                        <p className="text-2xl md:text-3xl font-light mb-1" style={{ fontFamily: F.display, color: C.accent }}>{stat.num}</p>
-                        <p className="text-xs tracking-[0.2em] uppercase" style={{ color: C.textMuted, fontFamily: F.ui }}>{stat.label}</p>
-                      </div>
-                    ))}
+                    <AnimatedCounter end={50} suffix="+" label="Années" duration={1.8} formatNumber={false}
+                      valueClassName="text-2xl md:text-3xl font-light" labelClassName="text-xs tracking-[0.2em] uppercase"
+                      className="" />
+                    <AnimatedCounter end={3} label="Générations" duration={1.2} formatNumber={false}
+                      valueClassName="text-2xl md:text-3xl font-light" labelClassName="text-xs tracking-[0.2em] uppercase"
+                      className="" />
+                    <AnimatedCounter end={15} label="Hectares" duration={1.5} formatNumber={false}
+                      valueClassName="text-2xl md:text-3xl font-light" labelClassName="text-xs tracking-[0.2em] uppercase"
+                      className="" />
                   </div>
                 </div>
                 <div className="reveal-up">
@@ -363,7 +375,7 @@ export default function App() {
                 {vignerons.map((v, i) => (
                   <div key={i} className="reveal-up group">
                     <div className="relative aspect-[3/4] mb-6 overflow-hidden rounded-2xl shadow-lg">
-                      <img src={v.image} alt={v.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                      <img src={v.image} alt={v.name} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                       <div className="absolute bottom-6 left-6">
                         <p className="text-xs tracking-[0.2em] uppercase" style={{ color: C.accentLight, fontFamily: F.ui }}>{v.generation}</p>
@@ -413,6 +425,26 @@ export default function App() {
                     Instagram
                   </a>
                 </Magnetic>
+              </div>
+            </div>
+          </section>
+
+          <section id="contact-form" className="py-24 md:py-32 px-6 md:px-16" style={{ background: C.bgElevated }}>
+            <div className="max-w-4xl mx-auto">
+              <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-start">
+                <div>
+                  <div className="reveal-line w-16 h-px mb-8" style={{ background: C.accent }} />
+                  <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: C.sage, fontFamily: F.ui }}>Nous écrire</p>
+                  <h2 className="text-3xl md:text-5xl font-light mb-6" style={{ fontFamily: F.display, color: C.text }}>
+                    Venez au <em style={{ color: C.accent }}>domaine</em>
+                  </h2>
+                  <div className="space-y-4 text-sm" style={{ color: C.textMuted }}>
+                    <p>1379 route du Carroi Taveau<br/>37140 Saint-Nicolas-de-Bourgueil</p>
+                    <p><a href="tel:+33247977688" className="hover:underline" style={{ color: C.accent }}>02 47 97 76 88</a></p>
+                    <p>Du lundi au samedi, 9h–18h</p>
+                  </div>
+                </div>
+                <ContactForm />
               </div>
             </div>
           </section>

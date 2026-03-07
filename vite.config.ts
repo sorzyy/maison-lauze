@@ -5,11 +5,29 @@ import { inspectAttr } from 'kimi-plugin-inspect-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/maison-lauze/',
+  base: './',
   plugins: [inspectAttr(), react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        v2: path.resolve(__dirname, 'v2.html'),
+      },
+      output: {
+        manualChunks: {
+          'vendor-gsap': ['gsap'],
+          'vendor-framer': ['framer-motion'],
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-lenis': ['lenis'],
+          'vendor-three': ['three', '@react-three/fiber'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
   },
 });

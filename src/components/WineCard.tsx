@@ -83,7 +83,7 @@ export function WineCard({ wine }: { wine: Wine }) {
 
       {/* Image Container */}
       <div className="relative h-80 overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.bg}, ${C.bgElevated})` }}>
-        <img
+        <img loading="lazy" decoding="async"
           src={wine.image}
           alt={wine.name}
           className="w-full h-full object-contain p-6 transition-transform duration-500"

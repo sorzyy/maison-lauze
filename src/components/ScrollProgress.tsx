@@ -1,62 +1,58 @@
 import { useEffect, useState } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 
+const C = {
+  accent: '#8B3A3A',
+  sage: '#7A8B6E',
+  text: '#5C4033',
+};
+
 export function ScrollProgress() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
-    restDelta: 0.001
+    restDelta: 0.001,
   });
-  
+
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsVisible(window.scrollY > 100);
-    };
-
+    const handleScroll = () => setIsVisible(window.scrollY > 300);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
     <>
-      {/* Progress bar at top */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1 z-[100] origin-left"
-        style={{ 
+        className="fixed top-0 left-0 right-0 h-[2px] z-[400] origin-left"
+        style={{
           scaleX,
-          background: 'linear-gradient(90deg, #7a1a1a 0%, #c4402a 50%, #b8963e 100%)'
+          background: `linear-gradient(90deg, ${C.accent} 0%, ${C.sage} 100%)`,
         }}
       />
-      
-      {/* Back to top button */}
+
       <motion.button
         initial={{ opacity: 0, y: 20 }}
-        animate={{ 
+        animate={{
           opacity: isVisible ? 1 : 0,
           y: isVisible ? 0 : 20,
-          pointerEvents: isVisible ? 'auto' : 'none'
+          pointerEvents: isVisible ? 'auto' : 'none',
         }}
         transition={{ duration: 0.3 }}
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="fixed bottom-8 left-8 z-50 w-12 h-12 rounded-full flex items-center justify-center transition-transform hover:scale-110"
-        style={{ 
-          background: 'rgba(122,26,26,0.9)',
-          backdropFilter: 'blur(10px)'
+        aria-label="Retour en haut"
+        className="fixed bottom-8 left-8 z-50 w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
+        style={{
+          background: `rgba(92,64,51,0.12)`,
+          backdropFilter: 'blur(12px)',
+          border: `1px solid rgba(92,64,51,0.2)`,
+          color: C.text,
         }}
       >
-        <svg 
-          width="20" 
-          height="20" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2"
-          className="transform rotate-180"
-        >
-          <path d="M12 5v14M19 12l-7 7-7-7" />
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <polyline points="18 15 12 9 6 15" />
         </svg>
       </motion.button>
     </>
