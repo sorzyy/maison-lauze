@@ -18,19 +18,24 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
 
     lenisRef.current = lenis;
 
+    // Required for GSAP ScrollTrigger to work correctly with Lenis
+    ScrollTrigger.normalizeScroll(true);
+
     lenis.on('scroll', ScrollTrigger.update);
 
-    gsap.ticker.add((time) => {
+    const rafCallback = (time: number) => {
       lenis.raf(time * 1000);
-    });
+    };
 
+    gsap.ticker.add(rafCallback);
     gsap.ticker.lagSmoothing(0);
+
+    // Refresh ScrollTrigger after Lenis settles to fix initial position calculations
+    setTimeout(() => ScrollTrigger.refresh(), 100);
 
     return () => {
       lenis.destroy();
-      gsap.ticker.remove((time) => {
-        lenis.raf(time * 1000);
-      });
+      gsap.ticker.remove(rafCallback);
     };
   }, []);
 

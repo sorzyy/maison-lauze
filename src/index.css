@@ -183,6 +183,14 @@ body {
   outline-offset: 4px;
 }
 
+/* Fallback visibility — GSAP overrides these, but content stays readable if JS fails */
+.reveal-up {
+  opacity: 1;
+}
+.reveal-line {
+  transform: scaleX(1);
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
