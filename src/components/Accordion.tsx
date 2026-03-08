@@ -1,79 +1,100 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { gsap } from 'gsap';
 import { Plus, Minus } from 'lucide-react';
-import { useAudio } from '@/context/AudioContext';
 
-const F = {
-  ui: "'Inter', -apple-system, sans-serif",
-};
-
-interface AccordionItemProps {
+interface AccordionItem {
   question: string;
   answer: string;
-  isOpen: boolean;
-  onClick: () => void;
 }
 
-function AccordionItem({ question, answer, isOpen, onClick }: AccordionItemProps) {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const { playHover, playClick } = useAudio();
+const C = {
+  accent: '#8B3A3A',
+  text: '#5C4033',
+  bg: '#F5EDE4',
+  bgElevated: '#FDF8F3',
+  textMuted: 'rgba(92,64,51,0.6)',
+};
 
-  const handleClick = () => {
-    playClick();
-    onClick();
-  };
+function AccordionItemComponent({ item, isOpen, onClick }: { item: AccordionItem; isOpen: boolean; onClick: () => void }) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const answerRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (!contentRef.current || !answerRef.current) return;
+
+    if (isOpen) {
+      const height = answerRef.current.offsetHeight;
+      gsap.to(contentRef.current, {
+        height,
+        duration: 0.4,
+        ease: 'power2.out',
+      });
+    } else {
+      gsap.to(contentRef.current, {
+        height: 0,
+        duration: 0.3,
+        ease: 'power2.inOut',
+      });
+    }
+  }, [isOpen]);
 
   return (
-    <div 
-      className="border-b transition-colors duration-300"
-      style={{ borderColor: isOpen ? 'rgba(122,26,26,0.5)' : 'rgba(255,255,255,0.1)' }}
-      onMouseEnter={playHover}
+    <div
+      className="border-b transition-colors"
+      style={{ borderColor: isOpen ? `${C.accent}30` : 'rgba(92,64,51,0.1)' }}
     >
       <button
-        onClick={handleClick}
+        onClick={onClick}
         className="w-full py-6 flex items-center justify-between text-left group"
       >
-        <span className="text-lg font-light pr-8 transition-transform duration-300 group-hover:translate-x-2"
-          style={{ fontFamily: F.ui }}>
-          {question}
+        <span
+          className="text-lg md:text-xl font-light pr-8 transition-colors"
+          style={{ 
+            fontFamily: "'Cormorant Garamond', serif",
+            color: isOpen ? C.accent : C.text
+          }}
+        >
+          {item.question}
         </span>
-        <span className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-          isOpen ? 'bg-[#7a1a1a] rotate-0' : 'bg-white/5 group-hover:bg-white/10'
-        }`}>
+        <span
+          className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all"
+          style={{ 
+            background: isOpen ? C.accent : 'rgba(92,64,51,0.05)',
+            color: isOpen ? 'white' : C.text
+          }}
+        >
           {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
         </span>
       </button>
-      <div 
-        ref={contentRef}
-        className="overflow-hidden transition-all duration-500 ease-out"
-        style={{ 
-          maxHeight: isOpen ? '300px' : '0px',
-          opacity: isOpen ? 1 : 0
-        }}
-      >
-        <p className="pb-6 text-white/60 leading-relaxed pr-12" style={{ fontFamily: F.ui }}>
-          {answer}
+      
+      <div ref={contentRef} className="overflow-hidden" style={{ height: 0 }}>
+        <p
+          ref={answerRef}
+          className="pb-6 leading-relaxed"
+          style={{ color: C.textMuted }}
+        >
+          {item.answer}
         </p>
       </div>
     </div>
   );
 }
 
-interface AccordionProps {
-  items: { question: string; answer: string }[];
-}
+export function Accordion({ items }: { items: AccordionItem[] }) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-export function Accordion({ items }: AccordionProps) {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const handleClick = (index: number) => {
+    setOpenIndex(openIndex === index ? null : index);
+  };
 
   return (
-    <div className="w-full">
+    <div className="space-y-0">
       {items.map((item, index) => (
-        <AccordionItem
+        <AccordionItemComponent
           key={index}
-          question={item.question}
-          answer={item.answer}
+          item={item}
           isOpen={openIndex === index}
-          onClick={() => setOpenIndex(openIndex === index ? null : index)}
+          onClick={() => handleClick(index)}
         />
       ))}
     </div>

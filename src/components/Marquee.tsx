@@ -1,81 +1,83 @@
-import { useReducedMotion } from '@/context/ReducedMotionContext';
+import { useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
 
-const items = [
-  "Saint-Nicolas-de-Bourgueil",
-  "Bourgueil",
-  "Cabernet Franc",
-  "Agriculture Biologique",
-  "Famille Cognard",
-  "Fondée en 1973",
-  "15 Hectares",
-  "3 Générations",
-  "Certifié AB 2020",
-  "Val de Loire",
-  "Tuffeau",
-  "Vendanges manuelles",
-];
+const C = {
+  accent: '#8B3A3A',
+  text: '#5C4033',
+  bg: '#F5EDE4',
+  sage: '#7A8B6E',
+  gold: '#B8956B',
+  accentLight: '#D4A574',
+};
 
-export function Marquee({ reverse = false }: { reverse?: boolean }) {
-  const doubled = [...items, ...items, ...items];
-  
-  // Récupérer la préférence reduced-motion
-  const reducedMotion = useReducedMotion();
+const marqueeContent = ['★ AOP Saint-Nicolas-de-Bourgueil', '★ AOP Bourgueil', '★ 100% Cabernet Franc', '★ Agriculture Biologique'];
 
-  // En mode reduced-motion, afficher les éléments sans animation
-  if (reducedMotion) {
-    return (
-      <div className="relative overflow-hidden py-5 border-y border-white/[0.06]">
-        <div className="absolute inset-y-0 left-0 w-24 z-10 pointer-events-none"
-          style={{ background: "linear-gradient(90deg, #000, transparent)" }} />
-        <div className="absolute inset-y-0 right-0 w-24 z-10 pointer-events-none"
-          style={{ background: "linear-gradient(-90deg, #000, transparent)" }} />
+export function Marquee() {
+  const track1Ref = useRef<HTMLDivElement>(null);
+  const track2Ref = useRef<HTMLDivElement>(null);
 
-        <div
-          className="flex gap-12 whitespace-nowrap overflow-x-auto scrollbar-hide"
-          style={{
-            fontFamily: "'Syne', sans-serif",
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-          }}
-        >
-          {items.map((item, i) => (
-            <span key={i} className="flex items-center gap-12 text-xs tracking-[0.25em] uppercase text-white/25 flex-shrink-0">
-              {item}
-              <span className="inline-block w-1 h-1 rounded-full" style={{ background: '#7a1a1a' }} />
-            </span>
+  useEffect(() => {
+    if (!track1Ref.current || !track2Ref.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap.to(track1Ref.current, {
+        xPercent: -50,
+        ease: 'none',
+        duration: 30,
+        repeat: -1,
+      });
+      gsap.to(track2Ref.current, {
+        xPercent: 50,
+        ease: 'none',
+        duration: 25,
+        repeat: -1,
+      });
+    });
+
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <div className="py-8 overflow-hidden" style={{ background: C.bg }}>
+      {/* Track 1 - Left */}
+      <div className="overflow-hidden mb-4">
+        <div ref={track1Ref} className="flex whitespace-nowrap">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex items-center">
+              {marqueeContent.map((item, j) => (
+                <span key={j} className="mx-8 text-2xl md:text-3xl font-light tracking-wide"
+                  style={{ 
+                    fontFamily: "'Cormorant Garamond', serif",
+                    color: j % 2 === 0 ? C.sage : 'rgba(92,64,51,0.4)'
+                  }}
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
           ))}
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="relative overflow-hidden py-5 border-y border-white/[0.06]">
-      <div className="absolute inset-y-0 left-0 w-24 z-10 pointer-events-none"
-        style={{ background: "linear-gradient(90deg, #000, transparent)" }} />
-      <div className="absolute inset-y-0 right-0 w-24 z-10 pointer-events-none"
-        style={{ background: "linear-gradient(-90deg, #000, transparent)" }} />
-
-      <div
-        className="flex gap-12 whitespace-nowrap"
-        style={{
-          animation: `marquee${reverse ? "Rev" : ""} 35s linear infinite`,
-          willChange: "transform",
-          fontFamily: "'Syne', sans-serif",
-        }}
-      >
-        {doubled.map((item, i) => (
-          <span key={i} className="flex items-center gap-12 text-xs tracking-[0.25em] uppercase text-white/25">
-            {item}
-            <span className="inline-block w-1 h-1 rounded-full" style={{ background: '#7a1a1a' }} />
-          </span>
-        ))}
+      {/* Track 2 - Right */}
+      <div className="overflow-hidden">
+        <div ref={track2Ref} className="flex whitespace-nowrap translate-x-[-50%]">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex items-center">
+              {marqueeContent.map((item, j) => (
+                <span key={j} className="mx-8 text-xl md:text-2xl tracking-[0.2em] uppercase"
+                  style={{ 
+                    fontFamily: "'Inter', sans-serif",
+                    color: j % 2 === 0 ? C.text : C.accentLight
+                  }}
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
-
-      <style>{`
-        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-33.333%); } }
-        @keyframes marqueeRev { from { transform: translateX(-33.333%); } to { transform: translateX(0); } }
-      `}</style>
     </div>
   );
 }

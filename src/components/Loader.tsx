@@ -1,69 +1,67 @@
-import { useEffect, useRef, useState } from "react";
-import { useReducedMotion } from "@/context/ReducedMotionContext";
+import { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
+
+const C = {
+  accent: '#8B3A3A',
+  text: '#5C4033',
+  bg: '#F5EDE4',
+  sage: '#7A8B6E',
+};
 
 export function Loader({ onDone }: { onDone: () => void }) {
-  const lineRef = useRef<HTMLDivElement>(null);
-  const [phase, setPhase] = useState<"line" | "reveal" | "done">("line");
-  
-  // Récupérer la préférence reduced-motion
-  const reducedMotion = useReducedMotion();
+  const loaderRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // En mode reduced-motion, passer immédiatement à done sans animation
-    if (reducedMotion) {
-      setPhase("done");
-      onDone();
-      return;
+    const timer = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          return 100;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 100);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (progress >= 100) {
+      const tl = gsap.timeline();
+      tl.to(textRef.current, { opacity: 0, y: -20, duration: 0.5 })
+        .to(loaderRef.current, {
+          clipPath: 'inset(0 0 100% 0)',
+          duration: 0.8,
+          ease: 'power3.inOut',
+          onComplete: onDone,
+        });
     }
-
-    // Phase 1: draw the line (600ms)
-    const t1 = setTimeout(() => setPhase("reveal"), 900);
-    // Phase 2: overlay slides up (500ms)
-    const t2 = setTimeout(() => {
-      setPhase("done");
-      onDone();
-    }, 1700);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [onDone, reducedMotion]);
-
-  if (phase === "done") return null;
+  }, [progress, onDone]);
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black"
-      style={{
-        transform: phase === "reveal" ? "translateY(-100%)" : "translateY(0)",
-        transition: phase === "reveal" ? "transform 0.8s cubic-bezier(0.76, 0, 0.24, 1)" : "none",
-      }}
+      ref={loaderRef}
+      className="fixed inset-0 z-[500] flex items-center justify-center"
+      style={{ background: C.bg, clipPath: 'inset(0 0 0% 0)' }}
     >
-      {/* Logo mark */}
-      <div
-        className="mb-10 text-white/20 tracking-[0.4em] uppercase text-xs"
-        style={{ fontFamily: "'Syne', sans-serif" }}
-      >
-        Saint-Nicolas-de-Bourgueil
+      <div className="text-center">
+        <span ref={textRef} className="block text-4xl md:text-6xl font-light mb-4" 
+          style={{ fontFamily: "'Cormorant Garamond', serif", color: C.text }}>
+          Cognard
+        </span>
+        <div className="w-48 h-px mx-auto overflow-hidden" style={{ background: `${C.text}20` }}>
+          <div 
+            className="h-full transition-all duration-300"
+            style={{ width: `${Math.min(progress, 100)}%`, background: C.accent }}
+          />
+        </div>
+        <span className="block text-xs tracking-[0.3em] uppercase mt-4" 
+          style={{ color: C.sage, fontFamily: "'Inter', sans-serif" }}>
+          Chargement...
+        </span>
       </div>
-
-      {/* Line animation */}
-      <div className="relative h-px w-48 bg-white/10 overflow-hidden">
-        <div
-          ref={lineRef}
-          className="absolute inset-y-0 left-0 bg-rose-600"
-          style={{
-            width: "100%",
-            transform: "scaleX(0)",
-            transformOrigin: "left",
-            animation: "lineGrow 0.7s cubic-bezier(0.76, 0, 0.24, 1) 0.1s forwards",
-          }}
-        />
-      </div>
-
-      <style>{`
-        @keyframes lineGrow {
-          from { transform: scaleX(0); }
-          to   { transform: scaleX(1); }
-        }
-      `}</style>
     </div>
   );
 }
